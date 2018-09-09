@@ -13,7 +13,7 @@ public class App extends Thread implements AppCommons {
     private String message;
     private String localAddress;
     private DatagramPacket packet;
-    private MulticastSocket rec_socket = null;
+    private MulticastSocket recieve_socket = null;
     private byte[] buf = new byte[size_of_buf];
     private InetAddress group;
     private TreeSet<String> ip_table=new TreeSet<>();
@@ -22,16 +22,16 @@ public class App extends Thread implements AppCommons {
         message=localAddress;
         buf = message.getBytes();
         packet = new DatagramPacket(buf, buf.length, group, default_port);
-        rec_socket.send(packet);
+        recieve_socket.send(packet);
     }
 
     public void run() {
         try {
             localAddress=InetAddress.getLocalHost().getHostAddress();
             senderThread=new SenderThread();
-            rec_socket = new MulticastSocket(default_port);
+            recieve_socket = new MulticastSocket(default_port);
             group = InetAddress.getByName("230.0.0.0");
-            rec_socket.joinGroup(group);
+            recieve_socket.joinGroup(group);
 
             sendMessage();
             senderThread.start();
@@ -40,7 +40,7 @@ public class App extends Thread implements AppCommons {
             DatagramPacket rec_packet = new DatagramPacket(buf, buf.length);
 
             while (true) {
-                rec_socket.receive(rec_packet);
+                recieve_socket.receive(rec_packet);
                 String received = new String(rec_packet.getData(), 0, rec_packet.getLength());
                 if(!received.equals(localAddress) && isIpAddress(received)) {
                     if(!ip_table.contains(received)){
@@ -51,8 +51,8 @@ public class App extends Thread implements AppCommons {
                     break;
                 }
             }
-            rec_socket.leaveGroup(group);
-            rec_socket.close();
+            recieve_socket.leaveGroup(group);
+            recieve_socket.close();
         }
         catch (IOException ex){
             System.out.printf(""+ex.getMessage());
